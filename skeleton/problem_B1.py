@@ -6,19 +6,27 @@ from dotenv import load_dotenv  # .env 파일에서 환경 변수를 로드하�
 load_dotenv()  # .env 파일을 읽어 환경 변수로 설정합니다.
 
 # 1. [ dotenv를 활용하여 알라딘 API 키 가져오기 ]
-MY_TTBKEY = os.getenv('나의 알라딘 API 키')
+MY_TTBKEY = os.getenv('MY_TTBKEY')
 # 2. [ 공식 문서를 참고하여 알라딘 API 검색 URL 설정하기 ]
-ALADIN_SEARCH_URL = '알라딘 검색 API URL'
+ALADIN_SEARCH_URL = 'http://www.aladin.co.kr/ttb/api/ItemSearch.aspx'
 
 # 3. 주제별 도서 데이터를 가져오는 함수 정의
 def fetch_books_by_topic(topic, max_results=30):
     url = ALADIN_SEARCH_URL
     # 3.1 [ API 요청에 필요한 파라미터 설정 (문서 참고하여 작성해보기) ]
     params = {
-    
+        "TTBKey": MY_TTBKEY,
+        "Query": topic,
+        "QueryType": "Keyword",
+        "MaxResults": max_results,
+        "start": 1,
+        "SearchTarget": "Book",
+        "output": "js",
+        "Version": "20131101"
     }
     # 3.2 [ HTTP 요청 보내고 응답 데이터를 JSON 형식으로 반환하기 ]
-    pass
+    response = requests.get(url, params=params)
+    return response.json()
 
 # 4. 도서 데이터를 수집하고 분석하는 함수 정의
 def collect_and_analyze_books():
@@ -31,26 +39,34 @@ def collect_and_analyze_books():
 
     # 5.1 [ fetch_book_by_topic 함수 완성 후 주제별 도서 데이터 검색하여 가져오기 ]
     for topic in topics:
+        books = fetch_books_by_topic(topic)["item"]
         # 5.2 [ all_books 리스트에 가져온 도서 데이터 추가하기 ]
-        pass
+        all_books.extend(books)
 
         # 5.3 [ 주제별 가격 및 출판 연도 수집하기 ]
         prices = []         # 가격 리스트
         pub_years = []      # 출판 연도 리스트
         for book in books:
-            pass
+            # 정가
+            prices.append(book["priceStandard"])
+
+            # pubDate에서 연도만 추출
+            pub_years.append(int(book["pubDate"][:4]))
 
         # 5.4 [ 평균 가격, 연도 계산하기 ]
         # 연도는 정수형으로 변환
-        pass
+        avg_price = sum(prices) / len(prices)
+        avg_pub_year = round(sum(pub_years) / len(pub_years))
 
         topic_stats[topic] = {
             'avg_price': avg_price,
             'avg_pub_year': avg_pub_year
         }
-
-        # 5.5 [ 전체 도서 평균 가격과 평균 연도 구하기]
-        pass
+        overall_price += sum(prices)
+        overall_year += sum(pub_years)
+    # 5.5 [ 전체 도서 평균 가격과 평균 연도 구하기]
+    overall_avg_price = overall_price / len(all_books)
+    overall_avg_year = round(overall_year / len(all_books))
         
 
     # 계산 결과 출력
