@@ -7,9 +7,9 @@ from dotenv import load_dotenv  # 환경 변수 로드를 위한 라이브러리
 load_dotenv()  # .env 파일을 읽어 환경 변수로 설정합니다.
 
 # 1. [ dotenv를 활용하여 알라딘 API 키 가져오기 ]
-MY_TTBKEY = os.getenv('나의 알라딘 API 키')
+MY_TTBKEY = os.getenv('MY_TTBKEY')
 # 2. [ 공식 문서를 참고하여 알라딘 API 검색 URL 설정하기 ]
-ALADIN_SEARCH_URL = '알라딘 검색 API URL'
+ALADIN_SEARCH_URL = 'http://www.aladin.co.kr/ttb/api/ItemSearch.aspx'
 
 # 3. 도서 데이터를 가져오는 함수 정의
 def fetch_books(keyword):
@@ -22,10 +22,10 @@ def fetch_books(keyword):
     }
 
     # 3.1 [ requests 문서를 참고하여 HTTP GET 요청 보내는 코드 작성하기 ]
-    pass
+    response = requests.get(url, params=params)
 
     # 3.2 [ requests 문서를 참고하여 응답 데이터를  python의 dict 타입으로 변환하여 data 변수에 저장 ]
-    pass
+    data = response.json()
 
     return data
 
@@ -34,13 +34,16 @@ def fetch_books(keyword):
 def save_books_to_file(data, file_path):
 
     # 4.1 [ 도서 데이터 가져오기 ]
-    pass
+    books = data.get('item', [])
     
     lines = []
     for book in books:
         # 4.2 [ 도서 정보 가공하기기 ]
         # [ 도서 제목, 저자, 출판사, 가격 필드를 각각의 변수로 저장 ]
-        pass
+        title = book.get('title', '제목 없음')
+        author = book.get('author', '저자 미상')
+        publisher = book.get('publisher', '출판사 미상')
+        price = book.get('priceStandard', 0)
 
         # 가져온 데이터를 lines 리스트에 추가
         lines.append(f'## 제목: {title}, \n * 저자: {author}\n * 출판사: {publisher}, * 가격: {price}원')
@@ -48,7 +51,7 @@ def save_books_to_file(data, file_path):
 
     path = Path(file_path) # 파일 경로 객체 생성
     # 4.3 [ 데이터를 txt 파일로 저장 ]
-    pass
+    path.write_text('\n'.join(lines), encoding='utf-8')
 
 
 if __name__ == '__main__':
@@ -57,7 +60,7 @@ if __name__ == '__main__':
 
     # 5. [ output 폴더 생성 ]
     output_folder = Path('output')
-    pass
+    output_folder.mkdir(parents=True, exist_ok=True)
 
     # 도서 데이터를 파일로 저장
     file_path = output_folder / 'computer_books.txt'    # 저장될 파일명 및 경로로
